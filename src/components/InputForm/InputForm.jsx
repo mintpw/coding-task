@@ -11,12 +11,12 @@ const InputForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log(textInput, 'TEXT IS HERE');
-    // let splitLine = textInput.split('\n');
+    let eachTextInput = textInput.split('\n');
     // axios
     //   .post(
     //     'https://nlp.insightera.co.th/api/nlp/clustering?token=50513d52c72f169b216a2bbf4755f216',
 
-    //     JSON.stringify({ samples: splitLine })
+    //     JSON.stringify({ samples: eachTextInput })
     //   )
     //   .then(function (response) {
     //     console.log(response);
@@ -24,6 +24,11 @@ const InputForm = () => {
     //   .catch(function (error) {
     //     console.log(error);
     //   });
+
+    localStorage.setItem('historyInput', eachTextInput);
+    console.log(window);
+    let data = localStorage.getItem('historyInput');
+    setHistoryInput(data);
   };
 
   return (
@@ -35,7 +40,6 @@ const InputForm = () => {
             as='textarea'
             rows='3'
             value={textInput}
-            id='textarea'
             onChange={(e) => setTextInput(e.target.value)}
           />
         </Form.Group>
@@ -47,8 +51,6 @@ const InputForm = () => {
         <Card.Header>History</Card.Header>
         <ListGroup variant='flush'>
           <ListGroup.Item>{historyInput}</ListGroup.Item>
-          <ListGroup.Item>Dapibus ac facilisis in</ListGroup.Item>
-          <ListGroup.Item>Vestibulum at eros</ListGroup.Item>
         </ListGroup>
       </Card>
     </div>

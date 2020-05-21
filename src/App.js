@@ -7,7 +7,7 @@ import { InputForm } from './components';
 
 class App extends React.Component {
   setData() {
-    let obj = { InputForm };
+    let obj = { name: 'Harry', age: 14, email: 'google@gmail.com' };
     localStorage.setItem('myData', JSON.stringify(obj));
   }
 
