@@ -6,22 +6,26 @@ import 'bootstrap/dist/css/bootstrap.css';
 import { InputForm } from './components';
 
 class App extends React.Component {
-  setData() {
+  state = { data: '' };
+
+  setData = () => {
     let obj = { name: 'Harry', age: 14, email: 'google@gmail.com' };
     localStorage.setItem('myData', JSON.stringify(obj));
-  }
+  };
 
-  getData() {
+  getData = () => {
     let data = localStorage.getItem('myData');
     data = JSON.parse(data);
-    console.log(data.name);
-  }
+    this.setState({ data: data.name });
+    console.log(this.state.data);
+  };
   render() {
     return (
       <div className={styles.container}>
         <InputForm />
         <button onClick={() => this.setData()}>Set Data</button>
         <button onClick={() => this.getData()}>Get Data</button>
+        <text>{this.state.data}</text>
       </div>
     );
   }
