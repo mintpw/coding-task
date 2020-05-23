@@ -1,74 +1,75 @@
 import React, { useState, useEffect } from 'react';
-import { fetchData } from '../../api';
-import { Pie, Bar } from 'react-chartjs-2';
-import { Form, Button, Card, ListGroup } from 'react-bootstrap';
-import { writeStorage, useLocalStorage } from '@rehooks/local-storage';
-// import styles from './InputForm.module.css';
+import { Pie } from 'react-chartjs-2';
+import { Form, Button, Card, Alert } from 'react-bootstrap';
+import styles from './InputForm.module.css';
 import axios from 'axios';
 
 const InputForm = () => {
   const [textInput, setTextInput] = useState([]);
   const [saveInput, setSaveInput] = useState([]);
-  const [group, setGroup] = useState(['sss']);
+  const [group, setGroup] = useState([]);
   const [result, setResult] = useState([]);
-  const [pieData, setPieData] = useState({
-    labels: [],
-    datasets: [],
-  });
+  const [alertIsEnabled, setAlertIsEnabled] = useState(false);
+  const [pieData, setPieData] = useState({ labels: [], datasets: [] });
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
 
-  // const [textValue] = useLocalStorage('key');
   useEffect(() => {
     if (result.length > 0) {
       let dataArray = zipChart(result);
       setPieData({
-        labels: ['Group1', 'Group2', 'Group3'],
+        labels: ['Group 1', 'Group 2', 'Group 3'],
         datasets: [
           {
             data: dataArray,
             fill: true,
-            backgroundColor: ['red', 'green', 'blue'],
+            backgroundColor: ['#303960', '#ea9a96', '#f8b24f'],
           },
         ],
       });
     }
   }, [result]);
 
+  useEffect(() => {
+    localStorage.setItem('token', token);
+  }, [token]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(textInput, 'TEXT IS HERE');
+    setAlertIsEnabled(false);
+
+    if (!token) {
+      return;
+    }
+
+    if (textInput.length <= 0) {
+      return;
+    }
+
     let eachTextInput = textInput.split('\n');
     setSaveInput(eachTextInput);
     axios
       .post(
-        'https://nlp.insightera.co.th/api/nlp/clustering?token=50513d52c72f169b216a2bbf4755f216',
-
+        'https://nlp.insightera.co.th/api/nlp/clustering?token=' + token,
         JSON.stringify({
-          // k: 1,
           max_k: 3,
           samples: eachTextInput,
-        })
+        }),
+        { timeout: 4000 }
       )
       .then(function (response) {
-        console.log(response);
-        console.log(response?.data?.result?.message?.cluster);
-        console.log(response.config.data);
         setResult(response?.data?.result?.message?.cluster);
+        if (response?.data?.result.result.toUpperCase() === 'ERROR') {
+          setAlertIsEnabled(true);
+        }
       })
       .catch(function (error) {
         console.log(error);
+        setAlertIsEnabled(true);
       });
-
-    // writeStorage('key', eachTextInput);
-
-    // localStorage.setItem('historyInput', eachTextInput);
-    // console.log(window);
-    // let data = localStorage.getItem('historyInput');
-    // setHistoryInput(data);
   };
 
   let zip = (saveInput, result) =>
     saveInput.map((item, i) => [item, result[i]]);
-  console.log(zip(saveInput, result), 'ZIP');
 
   let zipChart = (result) => {
     const map = new Map();
@@ -81,98 +82,112 @@ const InputForm = () => {
         map.set(groupId, map.get(groupId) + 1);
       }
     });
-    //return map;
-    let someArray = [];
-    map.forEach((value) => {
-      someArray.push(value);
-    });
-    // result.forEach((element) => {
-    //   console.log('result', result);
-    //   console.log('someArray[element]', someArray[element]);
-    //   someArray[element]++;
-    // });
-    console.log('someArray', someArray);
-    return someArray;
+
+    let sortDataArray = [];
+    for (let index = 0; index < map.size; index++) {
+      sortDataArray.push(map.get(index));
+    }
+    return sortDataArray;
   };
 
-  var pieChart = result ? (
+  var pieChart = (
     <Pie
       data={pieData}
-      // {{
-      //   labels: ['Group1', 'Group2', 'Group3'],
-      //   datasets: [
-      //     {
-      //       data: [],
-      //       fill: true,
-      //       backgroundColor: ['red', 'green', 'blue'],
-      //     },
-      //   ],
-      // }}
       options={{
         title: {
           display: true,
-          text: 'ผลการวิเคราะห์',
+          text: 'Analysis Results',
           position: 'top',
-          fontColor: '#FFBC00',
+          fontColor: '#303960',
         },
-        // events: ['click'],
         rotation: -0.7 * Math.PI,
         onClick: function (e, activeElement) {
-          // activeElement[0].index;
-          console.log(activeElement, 'OnClickActive OUTSIDE');
           if (activeElement) {
             if (activeElement.length > 0) {
-              //console.log(activeElement[0]._index);
-              console.log(e, 'OnClickE');
-              console.log(activeElement, 'OnClickActive');
               setGroup(() => {
-                let groupArray = zip(saveInput, result);
-                let paragraph = [];
-                paragraph.push(<h4>Group {activeElement[0]._index + 1}</h4>);
+                const listElement = [];
+                const groupArray = zip(saveInput, result);
+
                 for (let index = 0; index < groupArray.length; index++) {
                   const element = groupArray[index];
-
                   if (element[1] === activeElement[0]._index) {
-                    paragraph.push(<div>{element[0]}</div>);
+                    listElement.push(<li>{element[0]}</li>);
                   }
-                  console.log(element, 'ELEMENT');
                 }
-                console.log(paragraph, 'paragraph');
-                return paragraph;
+
+                const numberOfMessage =
+                  listElement.length > 1 ? 'Messages' : 'Message';
+                return (
+                  <>
+                    <h4>
+                      Group {activeElement[0]._index + 1} ({listElement.length}{' '}
+                      {numberOfMessage})
+                    </h4>
+                    <ol>{listElement}</ol>
+                  </>
+                );
               });
             }
           }
         },
       }}
     />
-  ) : null;
-
-  // const BreakLine = ({ group }) => <li>{group}</li>;
+  );
 
   return (
-    <div>
-      <Form onSubmit={handleSubmit}>
-        <Form.Group>
-          <Form.Label>พิมพ์ข้อความภาษาไทยที่นี่</Form.Label>
-          <Form.Control
-            as='textarea'
-            rows='10'
-            id='textarea'
-            value={textInput}
-            onChange={(e) => setTextInput(e.target.value)}
-          />
-        </Form.Group>
-        <Button variant='primary' type='submit'>
-          Submit
-        </Button>
-        {pieChart}
-        <Card>
+    <div className={styles.container}>
+      <div className={styles.containerContent}>
+        <Alert
+          show={alertIsEnabled}
+          variant='danger'
+          onClose={() => setAlertIsEnabled(false)}
+          dismissible>
+          <Alert.Heading>SORRY</Alert.Heading>
+          <p>Something went wrong! Please try again later!</p>
+        </Alert>
+
+        <Card className={styles.cardStyle}>
+          <Form onSubmit={handleSubmit}>
+            <Form.Group>
+              <Form.Label>
+                Token <span style={{ color: 'red' }}>*</span>
+              </Form.Label>
+              <Form.Control
+                as='input'
+                rows='10'
+                id='tokenInput'
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+              />
+
+              <Form.Label>
+                Input Message Here <span style={{ color: 'red' }}>*</span>
+              </Form.Label>
+              <Form.Control
+                as='textarea'
+                rows='10'
+                id='textarea'
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+              />
+            </Form.Group>
+            <Button
+              className={styles.button}
+              type='submit'
+              disabled={!token || textInput.length <= 0}>
+              Submit
+            </Button>
+          </Form>
+        </Card>
+
+        <div className={styles.containerPie}>{pieChart}</div>
+        <Card className={styles.cardResult}>
           <Card.Body>
-            <h2>RESULT</h2>
+            <h2>Analysis Results</h2>
             {group}
           </Card.Body>
         </Card>
-      </Form>
+      </div>
     </div>
   );
 };

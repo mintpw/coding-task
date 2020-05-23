@@ -5,6 +5,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #e0e0e0;
 }
 
 code {
@@ -12,9 +13,25 @@ code {
     monospace;
 }
 
-/* .container {
+.container {
   display: flex;
-  align-items: center;
   justify-content: center;
   flex-direction: column;
-} */
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(121, 121, 121, 0.095);
+  box-shadow: 0 0 5px lightgray;
+  height: 50px;
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.footer {
+  height: 50px;
+  width: 100%;
+}
