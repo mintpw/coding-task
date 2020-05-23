@@ -1,6 +1,6 @@
 {
-  "homepage": "https://mintpw.github.io/coding-task/",
-  "name": "test-api",
+  "homepage": "https://mintpw.github.io/coding-task",
+  "name": "coding-task",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
